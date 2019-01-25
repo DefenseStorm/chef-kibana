@@ -1,153 +1,26 @@
 ---
-driver_plugin: vagrant
-driver_config:
-  product_name: chefdk
-  network:
-    - ["forwarded_port", {guest: 8080, host: 8080, auto_correct: true}]
+driver:
+  name: vagrant
 
 provisioner:
   name: chef_zero
-
-platforms:
-- name: ubuntu-14.04
-  run_list:
-    - recipe[apt]
-- name: ubuntu-16.04
-  run_list:
-    - recipe[apt]
-- name: centos-6.9
-  attributes:
-    yum:
-      epel:
-        mirrorlist: http://mirrors.fedoraproject.org/metalink?repo=epel-6&arch=$basearch
-        gpgkey: http://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-6
-        sslverify: false
-- name: centos-7.4.1708
+  # You may wish to disable always updating cookbooks in CI or other testing environments.
+  # For example:
+  #   always_update_cookbooks: <%= !ENV['CI'] %>
+  always_update_cookbooks: true
+  client_rb:
+    environment: dev
 
 verifier:
   name: inspec
 
+platforms:
+  - name: ubuntu-16.04
+
 suites:
-- name: kibana4_apache
-  run_list:
-    - 'recipe[netstat]'
-    - 'recipe[apache2]'
-    - 'recipe[java]'
-    - 'recipe[kibana]'
-    - 'recipe[kibana::apache]'
-  attributes:
-    apache:
-      listen:
-       - '*:8080'
-    kibana:
-      base_dir: '/opt/kibana'
-      repository_url: 'http://packages.elastic.co/kibana/4.5/debian'
-      repository_key: 'https://packages.elastic.co/GPG-KEY-elasticsearch'
-      version: 4
-      apache:
-        port: 8080
-      interface: '0.0.0.0'
-    java:
-      jdk_version: '8'
-- name: kibana4_nginx
-  run_list:
-    - 'recipe[netstat]'
-    - 'recipe[nginx]'
-    - 'recipe[java]'
-    - 'recipe[kibana]'
-    - 'recipe[kibana::nginx]'
-  attributes:
-    kibana:
-      repository_url: 'http://packages.elastic.co/kibana/4.5/debian'
-      repository_key: 'https://packages.elastic.co/GPG-KEY-elasticsearch'
-      version: 4
-      base_dir: '/opt/kibana'
-      service:
-        bin_path: '/bin'
-      interface: '0.0.0.0'
-      nginx:
-        listen_http: 8080
-    java:
-      jdk_version: '8'
-    nginx:
-      default_site_enabled: false
-- name: kibana4_apache_package
-  run_list:
-    - 'recipe[kibana]'
-    - 'recipe[apache2]'
-    - 'recipe[kibana::apache]'
-  attributes:
-    apache:
-      listen:
-       - '*:8080'
-    kibana:
-      repository_url: 'http://packages.elastic.co/kibana/4.5/debian'
-      repository_key: 'https://packages.elastic.co/GPG-KEY-elasticsearch'
-      base_dir: '/opt/kibana'
-      install_method: 'package'
-      version: 4
-      kibana4_version: '4.5.4'
-      apache:
-        port: 8080
-      interface: '0.0.0.0'
-      service:
-        options: '--max-old-space-size=100'
-- name: kibana4_nginx_package
-  run_list:
-    - 'recipe[netstat]'
-    - 'recipe[nginx]'
-    - 'recipe[java]'
-    - 'recipe[kibana]'
-    - 'recipe[kibana::nginx]'
-  attributes:
-    kibana:
-      repository_url: 'http://packages.elastic.co/kibana/4.5/debian'
-      repository_key: 'https://packages.elastic.co/GPG-KEY-elasticsearch'
-      base_dir: '/opt/kibana'
-      install_method: 'package'
-      version: 4
-      kibana4_version: '4.5.4'
-      interface: '0.0.0.0'
-      nginx:
-        listen_http: 8080
-    java:
-      jdk_version: '8'
-    nginx:
-      default_site_enabled: false
-- name: kibana5_nginx
-  run_list:
-    - 'recipe[netstat]'
-    - 'recipe[nginx]'
-    - 'recipe[java]'
-    - 'recipe[kibana]'
-    - 'recipe[kibana::nginx]'
-  attributes:
-    kibana:
-      version: 5
-      base_dir: '/usr/share/kibana/'
-      interface: '0.0.0.0'
-      nginx:
-        listen_http: 8080
-    java:
-      jdk_version: '8'
-    nginx:
-      default_site_enabled: false
-- name: kibana5_nginx_package
-  run_list:
-    - 'recipe[netstat]'
-    - 'recipe[nginx]'
-    - 'recipe[java]'
-    - 'recipe[kibana]'
-    - 'recipe[kibana::nginx]'
-  attributes:
-    kibana:
-      install_method: 'package'
-      version: 5
-      base_dir: '/usr/share/kibana/'
-      interface: '0.0.0.0'
-      nginx:
-        listen_http: 8080
-    java:
-      jdk_version: '8'
-    nginx:
-      default_site_enabled: false
+  - name: default
+    run_list:
+      - recipe[kibana]
+    verifier:
+      inspec_tests:
+        - test/smoke/default
