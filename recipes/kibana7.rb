@@ -55,3 +55,9 @@ template File.join(node['kibana']['base_dir'], config_path) do
   )
   notifies :restart, 'service[kibana]'
 end
+
+directory '/var/run/kibana' do
+  owner node['kibana']['user']
+  group node['kibana']['group']
+  mode '0755'
+end
